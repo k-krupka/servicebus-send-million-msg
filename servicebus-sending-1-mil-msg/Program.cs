@@ -15,20 +15,31 @@ namespace servicebus_sending_1_mil_msg
 
         static Program()
         {
-            MyMessageSender = new MessageSender(ServiceBusConnectionString, "test-topic", RetryPolicy.NoRetry);
+            MyMessageSender = new MessageSender(ServiceBusConnectionString, "platformevent", RetryPolicy.NoRetry);
         }
 
         static async Task Main(string[] args)
         {
-            await SendSeriesOfMessages(100);
-            await SendSeriesOfMessages(500);
-            await SendSeriesOfMessages(1000);
-            await SendSeriesOfMessages(2000);
-            await SendSeriesOfMessages(5000);
-            await SendSeriesOfMessages(10000);
-            await SendSeriesOfMessages(20000);
-            await SendSeriesOfMessages(50000);
-            await SendSeriesOfMessages(100000);
+            try
+            {
+                // await SendSeriesOfMessages(100);
+                // await SendSeriesOfMessages(500);
+                // await SendSeriesOfMessages(1000);
+                // await SendSeriesOfMessages(2000);
+                // await SendSeriesOfMessages(5000);
+                // await SendSeriesOfMessages(10000);
+                await SendSeriesOfMessages(20000);
+                // await SendSeriesOfMessages(50000);
+                // await SendSeriesOfMessages(100000);
+            }
+            catch (Exception e)
+            {
+
+            }
+            finally
+            {
+                
+            }
 
 
             Console.WriteLine("press any key to continue...");
@@ -37,30 +48,17 @@ namespace servicebus_sending_1_mil_msg
 
         private static async Task SendSeriesOfMessages(int numberOfMessagesToSend)
         {
-            byte[] payload = new byte[60000];
-            for (int i = 0; i < 60000; i++)
+            byte[] payload = new byte[4000];
+            for (int i = 0; i < payload.Length; i++)
             {
                 payload[i] = 1;
-            }
-
-            Console.WriteLine($"use case ({numberOfMessagesToSend} messages) -> send msg one by one");
-            {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
-
-                for (int i = 0; i < numberOfMessagesToSend; i++)
-                {
-                    await MyMessageSender.SendAsync(new Message(payload)).ConfigureAwait(false);
-                }
-
-                stopwatch.Stop();
-                Console.WriteLine($"use case ({numberOfMessagesToSend} messages) -> send msg one by one, elapsed: {stopwatch.Elapsed.TotalSeconds:N0} s");
             }
 
             Console.WriteLine($"use case ({numberOfMessagesToSend} messages) -> send batch");
             {
                 List<Message> collectionOf4Messages = new List<Message>(4);
-                for (int j = 0; j < 4; j++)
+                var limit = 256000 / payload.Length;
+                for (int j = 0; j < limit; j++)
                 {
                     collectionOf4Messages.Add(new Message(payload));
                 }
@@ -68,7 +66,7 @@ namespace servicebus_sending_1_mil_msg
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                int numberOfBatches = numberOfMessagesToSend / 4;
+                int numberOfBatches = numberOfMessagesToSend / (256000 / payload.Length);
 
                 for (int i = 0; i < numberOfBatches; i++)
                 {
